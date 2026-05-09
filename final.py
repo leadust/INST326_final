@@ -1,3 +1,6 @@
+import sys
+import json
+import pickle
 
 
 def bill_organizer(bills, name, amount, date, number):
@@ -101,7 +104,7 @@ class Bills():
         self.amount.append(float(input("How much is the bill?: ")))
         self.date = input("What's the date of the bill? ")
         self.bills = bill_organizer(self.bills, self.bill_name, self.amount[0-1], self.date, self.number)
-        return self.bills
+        print(self.bills)
 
     #This method works to add all the values of the amount variable and subtract them from the paid variable.
     # It then rounds it to the nearest 2 decimal points
@@ -109,11 +112,11 @@ class Bills():
         total = sum(self.amount)
         total -= self.paid
         total = round(total, 2)
-        return total
+        print(f"Your outstanding amount is ${total}")
     
     #This method returns the amount of bills still owed in a simple numerical form
     def quantity(self):
-        return (f"The total number of bills you currently owe are: {len(list(self.bills.keys()))}")
+        print(f"The total number of bills you currently owe are: {len(list(self.bills.keys()))}")
     
     """
     This function is how the bills are paid. It asks the user about the information regarding the bill
@@ -135,7 +138,7 @@ class Bills():
         if pay_total == "Y" : 
             self.paid += pay_amount
             del self.bills[number]
-            return(f"You've just paid {pay_name} a total of {pay_amount} \\ It's now been removed from the records")
+            print(f"You've just paid {pay_name} a total of {pay_amount} \\ It's now been removed from the records")
             
 
             
@@ -144,10 +147,9 @@ class Bills():
             if partial_amount >= self.bills[number]['Amount']:
                 raise ValueError("You've paid more or the entire bill! rerun this and select (Y)")
             self.paid += partial_amount
-            print(number)
             self.bills[number]['Amount'] -= partial_amount
             self.bills[number]['Amount'] = round(self.bills[number]['Amount'], 2)
-            return(f"You've just paid {partial_amount}, your remaining balance is {self.bills[number]['Amount']}")
+            print(f"You've just paid {partial_amount}, your remaining balance is {self.bills[number]['Amount']}")
             
 
         else:
@@ -159,3 +161,65 @@ class Bills():
     def list_bills(self):
         return (f" The list of currently owed bills is: {list(self.bills.values())}")
     
+def main():
+    user_choice = input("What would you like to do today (Input the letter corresponding to the action)\n"\
+                         "A. Create a new dictionary \n B. Add to an existing dictionary \n" \
+                        "C. Check current balance \nD. Pay outstanding bills \nE. Check how many bills are outstanding\n")
+    if user_choice == "A":
+        bill_name = input("WARNING THIS WILL OVERRIDE YOUR PREVIOUS DIRECTORY \n" \
+        "What's the name of the company/person that the bill is to?: ")
+        bill_date = input("What is the date that the bill is due?: ")
+        bill_amount = input("How much is the bill?: ")
+        current_bills =  Bills(bill_name, bill_date, bill_amount)
+        with open('data.pickle', 'wb') as f:
+            pickle.dump(current_bills, f, pickle.HIGHEST_PROTOCOL)
+        return current_bills.list_bills()
+    
+    elif user_choice == "B":
+
+        with open('data.pickle', 'rb') as f:
+            current_bills = pickle.load(f)
+
+        current_bills.add()
+        
+        with open('data.pickle', 'wb') as f:
+            pickle.dump(current_bills, f, pickle.HIGHEST_PROTOCOL)
+
+        return 
+
+    elif user_choice == "C":
+
+        with open('data.pickle', 'rb') as f:
+            current_bills = pickle.load(f)
+        
+        current_bills.owed()
+
+        return 
+    
+    elif user_choice == "D":
+
+        with open('data.pickle', 'rb') as f:
+            current_bills = pickle.load(f)
+        
+        current_bills.pay()
+
+        with open('data.pickle', 'wb') as f:
+            pickle.dump(current_bills, f, pickle.HIGHEST_PROTOCOL)
+
+        return 
+    
+    elif user_choice == "E":
+
+        with open('data.pickle', 'rb') as f:
+            current_bills = pickle.load(f)
+
+        return current_bills.list_bills()
+    
+    else:
+        raise ValueError("No correct answer entered, please try again")
+
+
+if __name__ == "__main__":
+
+
+    main()
